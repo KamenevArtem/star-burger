@@ -1,9 +1,11 @@
-import json
+from pandas import isnull
+
 
 from django.http import JsonResponse
 from django.templatetags.static import static
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
+from rest_framework import status
 
 
 from .models import Product, Order, OrderElement
@@ -64,7 +66,13 @@ def product_list_api(request):
 @api_view(['POST'])
 def register_order(request):
     data = request.data
+    if ('products' not in data
+        or isnull(data['products'])
+        or len(data['products'])==0):
+        return Response('error: products key is not presented')
     products_list = data['products']
+    if not isinstance(products_list, list):
+        return Response('error: products key is not list type')
     order = Order.objects.create(
         first_name=data['firstname'],
         second_name=data['lastname'],
