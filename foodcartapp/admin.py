@@ -7,11 +7,43 @@ from .models import Product
 from .models import ProductCategory
 from .models import Restaurant
 from .models import RestaurantMenuItem
+from .models import Order
+from .models import OrderElement
 
 
 class RestaurantMenuItemInline(admin.TabularInline):
     model = RestaurantMenuItem
     extra = 0
+
+
+class OrderElementsInline(admin.TabularInline):
+    model = OrderElement
+    fields = ['show_preview', 'quantity']
+    readonly_fields = ['show_preview']
+    extra = 0
+    def show_preview(self, obj):
+        return format_html(
+            '<img style="max-height:{height}" src="{url}"/>',
+            height='200px',
+            url=obj.product.image.url
+        )
+
+
+@admin.register(Order)
+class OrderAdmin(admin.ModelAdmin):
+    search_fields = [
+        'first_name',
+        'phone',
+        'adress',
+    ]
+    list_display = [
+        'first_name',
+        'second_name',
+        'phone'
+    ]
+    inlines = [
+        OrderElementsInline
+    ]
 
 
 @admin.register(Restaurant)
