@@ -44,6 +44,7 @@ class OrderSerializer(ModelSerializer):
     class Meta:
         model = Order
         fields = [
+            'id',
             'firstname',
             'lastname',
             'phonenumber',
