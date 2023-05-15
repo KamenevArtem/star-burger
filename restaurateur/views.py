@@ -92,7 +92,7 @@ def view_restaurants(request):
 
 @user_passes_test(is_manager, login_url='restaurateur:login')
 def view_orders(request):
-    orders = Order.objects.all()
+    orders = Order.objects.count_order_price()
     orders_to_show = []
     for order in orders:
         orders_to_show.append(
@@ -100,7 +100,8 @@ def view_orders(request):
                 'id': order.id,
                 'client': f'{order.firstname} {order.lastname}',
                 'phone': f'+{order.phonenumber.country_code}{order.phonenumber.national_number}',
-                'address': order.address
+                'address': order.address,
+                'order_price': f'{order.order_price} рублей'
             }
         )
     return render(
