@@ -1,6 +1,7 @@
 from django.db import models
 from django.db.models import F, Sum
 from django.core.validators import MinValueValidator
+from django.utils import timezone
 from django.utils.translation import gettext_lazy
 from phonenumber_field.modelfields import PhoneNumberField
 
@@ -128,7 +129,6 @@ class RestaurantMenuItem(models.Model):
 
 
 class OrderQuerySet(models.QuerySet):
-    
     def count_order_price(self):
         return self.annotate(
             order_price = Sum(
@@ -175,6 +175,20 @@ class Order(models.Model):
         blank=True,
         max_length=400
     )
+    created_time = models.DateTimeField(
+        'Заказ создан',
+        default=timezone.now
+        )
+    called_time = models.DateTimeField(
+        'Время звонка',
+        null=True,
+        blank=True
+        )
+    delivered_time = models.DateTimeField(
+        'Время доставки',
+        null=True,
+        blank=True
+        )
     
     objects = OrderQuerySet.as_manager()
     
@@ -210,6 +224,7 @@ class OrderElement(models.Model):
         validators=[MinValueValidator(0)],
         verbose_name='Цена'
     )
+    
     class Meta:
         verbose_name = 'Содержание заказа'
         verbose_name_plural = 'Содержание заказа'
