@@ -83,7 +83,7 @@ class Product(models.Model):
     )
     description = models.TextField(
         'описание',
-        max_length=200,
+        max_length=300,
         blank=True,
     )
 
@@ -169,6 +169,11 @@ class Order(models.Model):
         max_length=30,
         default=OrderStatusChoice.ACCEPTED,
         db_index=True
+    )
+    comment = models.TextField(
+        verbose_name='Комментарий',
+        blank=True,
+        max_length=400
     )
     
     objects = OrderQuerySet.as_manager()
