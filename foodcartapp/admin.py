@@ -37,11 +37,16 @@ class OrderAdmin(admin.ModelAdmin):
         'firstname',
         'phonenumber',
         'adress',
+        'status'
     ]
     list_display = [
         'firstname',
         'lastname',
-        'phonenumber'
+        'phonenumber',
+        'status'
+    ]
+    list_editable = [
+        'status'
     ]
     inlines = [
         OrderElementsInline

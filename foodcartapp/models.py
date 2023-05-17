@@ -1,7 +1,9 @@
 from django.db import models
 from django.db.models import F, Sum
 from django.core.validators import MinValueValidator
+from django.utils.translation import gettext_lazy
 from phonenumber_field.modelfields import PhoneNumberField
+
 
 
 class Restaurant(models.Model):
@@ -136,6 +138,13 @@ class OrderQuerySet(models.QuerySet):
         
 
 class Order(models.Model):
+    
+    class OrderStatusChoice(models.TextChoices):
+        ACCEPTED = 'A', gettext_lazy('Принят')
+        PREPAIRING = 'P', gettext_lazy('Готовится')
+        DELIVERY = 'D', gettext_lazy('Передан в доставку')
+        DONE = 'DN', gettext_lazy('Заказ выполнен')
+    
     firstname = models.CharField(
         verbose_name='Имя',
         max_length=100
@@ -153,6 +162,13 @@ class Order(models.Model):
         verbose_name='Адрес',
         db_index=True,
         max_length=300
+    )
+    status = models.CharField(
+        verbose_name='Статус заказа',
+        choices=OrderStatusChoice.choices,
+        max_length=30,
+        default=OrderStatusChoice.ACCEPTED,
+        db_index=True
     )
     
     objects = OrderQuerySet.as_manager()
