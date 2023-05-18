@@ -97,10 +97,12 @@ def view_orders(request):
             {
                 'id': order.id,
                 'status': order.get_status_display(),
+                'payment': order.get_payment_display(),
                 'client': f'{order.firstname} {order.lastname}',
                 'phone': f'+{order.phonenumber.country_code}{order.phonenumber.national_number}',
                 'address': order.address,
-                'order_price': f'{order.order_price} рублей'
+                'order_price': f'{order.order_price} рублей',
+                'comment': order.comment
             }
         )
     return render(

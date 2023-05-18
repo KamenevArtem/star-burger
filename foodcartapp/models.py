@@ -145,6 +145,17 @@ class Order(models.Model):
         DELIVERY = 'D', gettext_lazy('Передан в доставку')
         DONE = 'DN', gettext_lazy('Заказ выполнен')
     
+    class OrderPaymentChoice(models.TextChoices):
+        CASH = 'C', gettext_lazy(
+            'Оплата наличными при получении'
+            )
+        CARD = 'CD', gettext_lazy(
+            'Оплата картой при получении'
+        )
+        ONLINE = 'O', gettext_lazy(
+            'Оплата картой онлайн'
+        )
+    
     firstname = models.CharField(
         verbose_name='Имя',
         max_length=100
@@ -170,6 +181,12 @@ class Order(models.Model):
         default=OrderStatusChoice.ACCEPTED,
         db_index=True
     )
+    payment = models.CharField(
+        verbose_name='Способ оплаты',
+        choices=OrderPaymentChoice.choices,
+        max_length=30,
+        blank=True
+    )
     comment = models.TextField(
         verbose_name='Комментарий',
         blank=True,
@@ -177,17 +194,20 @@ class Order(models.Model):
     )
     created_time = models.DateTimeField(
         'Заказ создан',
-        default=timezone.now
+        default=timezone.now,
+        db_index=True
         )
     called_time = models.DateTimeField(
         'Время звонка',
         null=True,
-        blank=True
+        blank=True,
+        db_index=True
         )
     delivered_time = models.DateTimeField(
         'Время доставки',
         null=True,
-        blank=True
+        blank=True,
+        db_index=True
         )
     
     objects = OrderQuerySet.as_manager()
