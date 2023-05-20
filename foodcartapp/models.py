@@ -135,7 +135,6 @@ class OrderQuerySet(models.QuerySet):
                 F('elements__price')*F('elements__quantity')
             )
         )
-        
 
 class Order(models.Model):
     
@@ -209,6 +208,15 @@ class Order(models.Model):
         blank=True,
         db_index=True
         )
+    restaurant = models.ForeignKey(
+        Restaurant,
+        verbose_name='Ресторан',
+        on_delete=models.PROTECT,
+        related_name='orders',
+        blank=True,
+        null=True,
+        help_text='Выберите ресторан для исполнения заказа'
+    )
     
     objects = OrderQuerySet.as_manager()
     
@@ -223,13 +231,13 @@ class Order(models.Model):
 class OrderElement(models.Model):
     order = models.ForeignKey(
         Order,
-        verbose_name='',
+        verbose_name='Заказ',
         on_delete=models.CASCADE,
         related_name='elements'
     )
     product = models.ForeignKey(
         Product,
-        verbose_name='',
+        verbose_name='Позиция',
         on_delete=models.CASCADE,
         related_name='elements'
     )

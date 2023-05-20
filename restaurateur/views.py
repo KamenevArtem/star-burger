@@ -6,7 +6,9 @@ from django.contrib.auth.decorators import user_passes_test
 from django.contrib.auth import authenticate, login
 from django.contrib.auth import views as auth_views
 
-from foodcartapp.models import Product, Restaurant, Order
+from pprint import pprint
+
+from foodcartapp.models import Product, Restaurant, Order, RestaurantMenuItem
 
 
 class Login(forms.Form):
@@ -90,21 +92,52 @@ def view_restaurants(request):
 
 @user_passes_test(is_manager, login_url='restaurateur:login')
 def view_orders(request):
-    orders = Order.objects.count_order_price().exclude(status='DN')
+    restaurants = Restaurant.objects.all()
+    orders = Order.objects \
+        .count_order_price() \
+        .exclude(status='DN') \
+        .order_by('status')
+    available_menu = RestaurantMenuItem.objects \
+        .prefetch_related('restaurant', 'product') \
+        .filter(availability=True) \
+        .order_by('product') \
+        .values_list('product', 'restaurant')
+    restaurant_products = {
+            product: set() for product, restaurant in available_menu
+        }
+    for product, restaurant in available_menu:
+        restaurant_products[product].add(restaurant)
     orders_to_show = []
     for order in orders:
-        orders_to_show.append(
-            {
-                'id': order.id,
-                'status': order.get_status_display(),
-                'payment': order.get_payment_display(),
-                'client': f'{order.firstname} {order.lastname}',
-                'phone': f'+{order.phonenumber.country_code}{order.phonenumber.national_number}',
-                'address': order.address,
-                'order_price': f'{order.order_price} рублей',
-                'comment': order.comment
-            }
-        )
+        orders_to_show_descriptions = {
+            'id': order.id,
+            'status': order.get_status_display(),
+            'payment': order.get_payment_display(),
+            'client': f'{order.firstname} {order.lastname}',
+            'phone': f'+{order.phonenumber.country_code}{order.phonenumber.national_number}',
+            'address': order.address,
+            'order_price': f'{order.order_price} рублей',
+            'comment': order.comment,
+            'restaurant': order.restaurant,
+        }
+        order_elements = order.elements.select_related('product')
+        available_restaurants = []
+        if order_elements != 0:
+            suitable_restaurants_ids = set.intersection(
+                    *[restaurant_products[order_element.product.id] for order_element in order_elements]
+                )
+            if order.restaurant:
+                available_restaurants = order.restaurant.name
+                orders_to_show_descriptions['restaurants'] = available_restaurants
+                order.status = 'P'
+                orders_to_show_descriptions['status'] = order.get_status_display()
+                order.save()
+            else:
+                for restaurant in restaurants:
+                    if restaurant.id in suitable_restaurants_ids:
+                        available_restaurants.append(restaurant.name)
+                orders_to_show_descriptions['restaurants'] = available_restaurants
+        orders_to_show.append(orders_to_show_descriptions)
     return render(
         request,
         template_name='order_items.html',
