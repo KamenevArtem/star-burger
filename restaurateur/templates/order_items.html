@@ -42,12 +42,18 @@
               </summary>
               <p> {{ item.restaurants }} </p>
             {% else %}
-              <summary>
-                Могут приготовить:
-              </summary>
-              {% for restaurant in item.restaurants %}
-                <p> &bull; {{ restaurant }} </p> 
-              {% endfor %}
+              {% if item.restaurants %}
+                <summary>
+                  Могут приготовить:
+                </summary>
+                {% for restaurant in item.restaurants %}
+                  <p> &bull; {{ restaurant|last }} </p> 
+                {% endfor %}
+              {%else%}
+                <summary>
+                  <p>Ошибка определения координат</p>
+                </summary>
+              {% endif %}
             {% endif %}
           </details>
         </td>

@@ -1,5 +1,7 @@
 import requests
 
+from geopy import distance
+
 from django import forms
 from django.shortcuts import redirect, render
 from django.views import View
@@ -7,8 +9,8 @@ from django.urls import reverse_lazy
 from django.contrib.auth.decorators import user_passes_test
 from django.contrib.auth import authenticate, login
 from django.contrib.auth import views as auth_views
-
 from foodcartapp.models import Product, Restaurant, Order, RestaurantMenuItem
+from star_burger.settings import YA_API_KEY
 
 
 class Login(forms.Form):
@@ -77,6 +79,25 @@ def fetch_restaurant_menu():
     return restaurant_products
 
 
+def fetch_coordinates(
+    address
+    ):
+    base_url = "https://geocode-maps.yandex.ru/1.x"
+    response = requests.get(base_url, params={
+        "geocode": address,
+        "apikey": YA_API_KEY,
+        "format": "json",
+    })
+    response.raise_for_status()
+    found = response.json() \
+        ['response']['GeoObjectCollection']['featureMember']
+    if not found:
+        return None
+    most_relevant = found[0]
+    lon, lat = most_relevant['GeoObject']['Point']['pos'].split(" ")
+    return lat, lon
+
+
 def create_order_description(order, restaurant_products, restaurants):
     orders_to_show_descriptions = {
         'id': order.id,
@@ -104,8 +125,28 @@ def create_order_description(order, restaurant_products, restaurants):
             order.save()
         else:
             for restaurant in restaurants:
+                restaurant_description = []
+                restaurant_coordinates = fetch_coordinates(
+                    restaurant.address
+                )
+                order_coordinates = fetch_coordinates(
+                    order.address
+                )
+                if not order_coordinates:
+                    break
+                distance_to_order = distance.distance(
+                        restaurant_coordinates,
+                        order_coordinates
+                    ).km
+                distance_to_order = distance.distance(
+                    restaurant_coordinates,
+                    order_coordinates
+                ).km
                 if restaurant.id in suitable_restaurants_ids:
-                    available_restaurants.append(restaurant.name)
+                    restaurant_description.append(distance_to_order)
+                    restaurant_description.append(restaurant.name)
+                    available_restaurants.append(restaurant_description)
+                    available_restaurants = sorted(available_restaurants)
             orders_to_show_descriptions['restaurants'] = available_restaurants
     return orders_to_show_descriptions
 
