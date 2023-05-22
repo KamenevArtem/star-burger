@@ -1,5 +1,3 @@
-import requests
-
 from geopy import distance
 
 from django import forms
@@ -9,7 +7,7 @@ from django.urls import reverse_lazy
 from django.contrib.auth.decorators import user_passes_test
 from django.contrib.auth import authenticate, login
 from django.contrib.auth import views as auth_views
-from foodcartapp.models import Product, Restaurant, Order, RestaurantMenuItem
+from foodcartapp.models import Product, Restaurant, Order, RestaurantMenuItem, Location
 from star_burger.settings import YA_API_KEY
 
 
@@ -79,26 +77,13 @@ def fetch_restaurant_menu():
     return restaurant_products
 
 
-def fetch_coordinates(
-    address
+def create_order_description(
+    order,
+    restaurant_products,
+    restaurants,
+    order_coordinates,
+    restaurant_coordinates
     ):
-    base_url = "https://geocode-maps.yandex.ru/1.x"
-    response = requests.get(base_url, params={
-        "geocode": address,
-        "apikey": YA_API_KEY,
-        "format": "json",
-    })
-    response.raise_for_status()
-    found = response.json() \
-        ['response']['GeoObjectCollection']['featureMember']
-    if not found:
-        return None
-    most_relevant = found[0]
-    lon, lat = most_relevant['GeoObject']['Point']['pos'].split(" ")
-    return lat, lon
-
-
-def create_order_description(order, restaurant_products, restaurants):
     orders_to_show_descriptions = {
         'id': order.id,
         'status': order.get_status_display(),
@@ -112,50 +97,40 @@ def create_order_description(order, restaurant_products, restaurants):
         'restaurant': order.restaurant,
     }
     order_elements = order.elements.select_related('product')
-    available_restaurants = []
     if order_elements != 0:
         suitable_restaurants_ids = set.intersection(
                 *[restaurant_products[order_element.product.id] for order_element in order_elements]
             )
-        if order.restaurant:
-            available_restaurants = order.restaurant.name
-            orders_to_show_descriptions['restaurants'] = available_restaurants
-            order.status = 'P'
-            orders_to_show_descriptions['status'] = order.get_status_display()
-            order.save()
+        distances = []
+        errors = []
+        if order_coordinates == 'Ошибка':
+            errors = {
+                'name': 'Ошибка определения координат'
+            }
         else:
-            for restaurant in restaurants:
-                restaurant_description = []
-                restaurant_coordinates = fetch_coordinates(
-                    restaurant.address
-                )
-                order_coordinates = fetch_coordinates(
-                    order.address
-                )
-                if not order_coordinates:
-                    break
-                distance_to_order = distance.distance(
-                        restaurant_coordinates,
-                        order_coordinates
-                    ).km
-                distance_to_order = distance.distance(
-                    restaurant_coordinates,
-                    order_coordinates
-                ).km
-                if restaurant.id in suitable_restaurants_ids:
-                    restaurant_description.append(distance_to_order)
-                    restaurant_description.append(restaurant.name)
-                    available_restaurants.append(restaurant_description)
-                    available_restaurants = sorted(available_restaurants)
-            orders_to_show_descriptions['restaurants'] = available_restaurants
-    return orders_to_show_descriptions
+            distances = [
+                {
+                    'id': restaurant.id,
+                    'name': restaurant.name,
+                    'distance': distance.distance(
+                        order_coordinates, restaurant_coordinates[restaurant.id]
+                    ).km,
+                } for restaurant in restaurants
+                if restaurant.id in suitable_restaurants_ids
+            ]
+            sorted(
+                distances,
+                key=lambda distance: distance['distance'],
+            )
+        order.distances = distances
+        order.errors = errors
+    return order
 
 
 @user_passes_test(is_manager, login_url='restaurateur:login')
 def view_products(request):
     restaurants = list(Restaurant.objects.order_by('name'))
     products = list(Product.objects.prefetch_related('menu_items'))
-
     products_with_restaurant_availability = []
     for product in products:
         availability = {item.restaurant_id: item.availability for item in product.menu_items.all()}
@@ -186,18 +161,54 @@ def view_orders(request):
         .count_order_price() \
         .exclude(status='DN') \
         .order_by('status')
+    known_locations = {
+            'address': (longitude, latitude) \
+                for address, longitude, latitude in
+                Location.objects.values_list(
+                    'address',
+                    'longitude',
+                    'latitude')
+        }
+    restaurants_coordinates = {
+        restaurant.id: known_locations[restaurant.address]
+        if restaurant.address in known_locations.keys()
+        else Location.objects.create_location(restaurant.address)
+        for restaurant in restaurants
+    }
     orders_to_show = []
     for order in orders:
-        orders_to_show_descriptions = create_order_description(
+        if order.restaurant:
+            order.status = 'P'
+            order.save()
+        order_location = known_locations[order.address] if order.address \
+            in known_locations.keys() \
+            else Location.objects.create_location(order.address)
+        create_order_description(
             order,
             restaurant_products,
-            restaurants
+            restaurants,
+            order_location,
+            restaurants_coordinates
         )
-        orders_to_show.append(orders_to_show_descriptions)
+        order_to_show = {
+            'id': order.id,
+            'status': order.get_status_display(),
+            'payment': order.get_payment_display(),
+            'client': f'{order.firstname} {order.lastname}',
+            'phone': f'+{order.phonenumber.country_code}'
+                     f'{order.phonenumber.national_number}',
+            'address': order.address,
+            'order_price': f'{order.order_price} рублей',
+            'comment': order.comment,
+            'restaurant': order.restaurant,
+            'errors': order.errors,
+            'restaurants': order.distances
+        }
+        orders_to_show.append(order_to_show)
     return render(
         request,
         template_name='order_items.html',
         context={
-            'orders_item': orders_to_show,
+            'order_items': orders_to_show,
             }
         )

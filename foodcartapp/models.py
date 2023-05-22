@@ -4,7 +4,8 @@ from django.core.validators import MinValueValidator
 from django.utils import timezone
 from django.utils.translation import gettext_lazy
 from phonenumber_field.modelfields import PhoneNumberField
-
+from .geo_utils import fetch_coordinates
+from star_burger.settings import YA_API_KEY
 
 
 class Restaurant(models.Model):
@@ -135,6 +136,23 @@ class OrderQuerySet(models.QuerySet):
                 F('elements__price')*F('elements__quantity')
             )
         )
+    
+    def fetch_restaurant(self):
+        restaurants = Restaurant.objects.all()
+        known_locations = {
+            'address': (lon, lat) for address, lon, lat in
+            Location.objects.values_list(
+                'address',
+                'longitude',
+                'latitude')
+        }
+        restaurants_coordinates = {
+            restaurant.id: known_locations[restaurant.address]
+            if restaurant.address in known_locations.keys()
+            else Location.objects.create_location(restaurant.address)
+            for restaurant in restaurants
+        }
+        
 
 class Order(models.Model):
     
@@ -262,3 +280,58 @@ class OrderElement(models.Model):
     
     def __str__(self):
         return f"{self.order.firstname} {self.order.phonenumber} {self.order.address}"
+
+
+class LocationQuerySet(models.QuerySet):
+    def create_location(self, address):
+        current_coordinates = fetch_coordinates(
+            YA_API_KEY,
+            address
+        )
+        if current_coordinates == 'Ошибка':
+            return current_coordinates
+        else:
+            current_address, created = self \
+                .update_or_create(
+                    address=address,
+                    defaults={
+                        'created_at': timezone.now,
+                        **fetch_coordinates(
+                            YA_API_KEY,
+                            address
+                        )
+                    }
+                )
+            return current_address.longitude \
+                ,current_address.latitude
+
+
+class Location(models.Model):
+    address = models.CharField(
+        verbose_name='Адрес',
+        max_length=100,
+        blank=True,
+        unique=True
+    )
+    latitude = models.FloatField(
+        verbose_name='Широта',
+        blank=True,
+        null=True
+    )
+    longitude = models.FloatField(
+        verbose_name='Долгота',
+        blank=True,
+        null=True
+    )
+    created_at = models.DateField(
+        verbose_name='Дата запроса',
+    )
+    
+    objects = LocationQuerySet.as_manager()
+    
+    class Meta:
+        verbose_name = 'Геолокация'
+        verbose_name_plural = 'Геолокации'
+    
+    def __str__(self):
+        return self.address

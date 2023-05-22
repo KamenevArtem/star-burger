@@ -54,9 +54,15 @@ python -m venv venv
 pip install -r requirements.txt
 ```
 
-Определите переменную окружения `SECRET_KEY`. Создать файл `.env` в каталоге `star_burger/` и положите туда такой код:
+Определите переменные окружения `SECRET_KEY`, `YA_API_KEY` Создать файл `.env` в каталоге `star_burger/` и положите туда такой код:
 ```sh
 SECRET_KEY=django-insecure-0if40nf4nf93n4
+```
+
+Для переменной `YA_API_KEY` перейдите по [ссылке](https://dvmn.org/encyclopedia/api-docs/yandex-geocoder-api/) для генерации кода API и запишите его в `.env` файл:
+
+```
+YA_API_KEY='Cгенирированный код'
 ```
 
 Создайте файл базы данных SQLite и отмигрируйте её следующей командой:

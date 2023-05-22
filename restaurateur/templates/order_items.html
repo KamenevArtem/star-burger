@@ -24,7 +24,7 @@
       <th>Рестораны</th>
     </tr>
 
-    {% for item in orders_item %}
+    {% for item in order_items %}
       <tr>
         <td>{{ item.id }}</td>
         <td>{{ item.status }}</td>
@@ -40,19 +40,19 @@
               <summary>
                 Готовит:
               </summary>
-              <p> {{ item.restaurants }} </p>
+              <p> {{ item.restaurant }} </p>
             {% else %}
-              {% if item.restaurants %}
+              {% if item.errors %}
+                <summary>
+                  <p>Ошибка определения координат</p>
+                </summary>
+              {% else %}
                 <summary>
                   Могут приготовить:
                 </summary>
                 {% for restaurant in item.restaurants %}
-                  <p> &bull; {{ restaurant|last }} </p> 
+                  <p> &bull; {{ restaurant.name }} </p> 
                 {% endfor %}
-              {%else%}
-                <summary>
-                  <p>Ошибка определения координат</p>
-                </summary>
               {% endif %}
             {% endif %}
           </details>
