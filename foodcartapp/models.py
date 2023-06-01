@@ -288,7 +288,7 @@ class LocationQuerySet(models.QuerySet):
             YA_API_KEY,
             address
         )
-        if current_coordinates == 'Ошибка':
+        if not current_coordinates:
             return current_coordinates
         else:
             current_address, created = self \
