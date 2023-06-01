@@ -157,6 +157,7 @@ class OrderQuerySet(models.QuerySet):
 class Order(models.Model):
     
     class OrderStatusChoice(models.TextChoices):
+        CREATED = 'C', gettext_lazy('Создан')
         ACCEPTED = 'A', gettext_lazy('Принят')
         PREPAIRING = 'P', gettext_lazy('Готовится')
         DELIVERY = 'D', gettext_lazy('Передан в доставку')
@@ -195,7 +196,7 @@ class Order(models.Model):
         verbose_name='Статус заказа',
         choices=OrderStatusChoice.choices,
         max_length=30,
-        default=OrderStatusChoice.ACCEPTED,
+        default=OrderStatusChoice.CREATED,
         db_index=True
     )
     payment = models.CharField(
