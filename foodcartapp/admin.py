@@ -65,6 +65,8 @@ class OrderAdmin(admin.ModelAdmin):
                 allowed_hosts=ALLOWED_HOSTS
             ):
                 return redirect(request.GET['next'])
+            else:
+                return response
         else:
             return response
 
