@@ -131,7 +131,7 @@ class RestaurantMenuItem(models.Model):
 
 class OrderQuerySet(models.QuerySet):
     def count_order_price(self):
-        return self.annotate(
+        return self.exclude(status='DN').order_by('status').annotate(
             order_price = Sum(
                 F('elements__price')*F('elements__quantity')
             )
@@ -266,9 +266,8 @@ class OrderElement(models.Model):
     price = models.DecimalField(
         max_digits=7,
         decimal_places=2,
-        default=0,
         validators=[MinValueValidator(0)],
-        verbose_name='Цена'
+        verbose_name='Цена',
     )
     
     class Meta:

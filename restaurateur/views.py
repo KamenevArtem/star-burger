@@ -158,9 +158,7 @@ def view_orders(request):
     restaurants = Restaurant.objects.all()
     restaurant_products = fetch_restaurant_menu()
     orders = Order.objects \
-        .count_order_price() \
-        .exclude(status='DN') \
-        .order_by('status')
+        .count_order_price()
     known_locations = {
             'address': (longitude, latitude) \
                 for address, longitude, latitude in
