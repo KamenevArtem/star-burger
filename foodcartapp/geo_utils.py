@@ -15,4 +15,4 @@ def fetch_coordinates(apikey, place):
             'latitude': float(lat)
         }
     else:
-        return 'Ошибка'
+        return None
