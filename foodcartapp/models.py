@@ -2,7 +2,7 @@ from django.db import models
 from django.db.models import F, Sum
 from django.core.validators import MinValueValidator
 from django.utils import timezone
-from django.utils.translation import gettext_lazy
+from django.utils.translation import gettext_lazy as _
 from phonenumber_field.modelfields import PhoneNumberField
 from .geo_utils import fetch_coordinates
 from star_burger.settings import YA_API_KEY
@@ -157,20 +157,20 @@ class OrderQuerySet(models.QuerySet):
 class Order(models.Model):
     
     class OrderStatusChoice(models.TextChoices):
-        CREATED = 'C', gettext_lazy('Создан')
-        ACCEPTED = 'A', gettext_lazy('Принят')
-        PREPAIRING = 'P', gettext_lazy('Готовится')
-        DELIVERY = 'D', gettext_lazy('Передан в доставку')
-        DONE = 'DN', gettext_lazy('Заказ выполнен')
+        CREATED = 'C', _('Создан')
+        ACCEPTED = 'A', _('Принят')
+        PREPAIRING = 'P', _('Готовится')
+        DELIVERY = 'D', _('Передан в доставку')
+        DONE = 'DN', _('Заказ выполнен')
     
     class OrderPaymentChoice(models.TextChoices):
-        CASH = 'C', gettext_lazy(
+        CASH = 'C', _(
             'Оплата наличными при получении'
             )
-        CARD = 'CD', gettext_lazy(
+        CARD = 'CD', _(
             'Оплата картой при получении'
         )
-        ONLINE = 'O', gettext_lazy(
+        ONLINE = 'O', _(
             'Оплата картой онлайн'
         )
     
