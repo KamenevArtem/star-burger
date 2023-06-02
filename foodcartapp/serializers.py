@@ -22,16 +22,10 @@ class OrderSerializer(ModelSerializer):
     phonenumber = PhoneNumberField(region='RU')
 
     def create(self, validated_data):
-        firstname = validated_data.get('firstname')
-        lastname = validated_data.get('lastname')
-        phonenumber = validated_data.get('phonenumber')
-        address = validated_data.get('address')
         products = validated_data.get('products')
+        del validated_data['products']
         order = Order.objects.create(
-            firstname=firstname,
-            lastname=lastname,
-            phonenumber=phonenumber,
-            address=address
+            **validated_data
         )
         for order_element in products:
             OrderElement.objects.create(
