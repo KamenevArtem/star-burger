@@ -326,7 +326,6 @@ class Location(models.Model):
     created_at = models.DateField(
         verbose_name='Дата запроса',
     )
-    
     objects = LocationQuerySet.as_manager()
     
     class Meta:
