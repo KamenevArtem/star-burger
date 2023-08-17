@@ -16,4 +16,5 @@ urlpatterns = [
 
     path('login/', views.LoginView.as_view(), name="login"),
     path('logout/', views.LogoutView.as_view(), name="logout"),
+    path('user_ip/', views.get_ip, name='get_ip')
 ]
