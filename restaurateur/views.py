@@ -1,7 +1,6 @@
 from geopy import distance
 
 from django import forms
-from django.http import JsonResponse
 from django.shortcuts import redirect, render
 from django.views import View
 from django.urls import reverse_lazy
@@ -58,12 +57,6 @@ class LoginView(View):
 
 class LogoutView(auth_views.LogoutView):
     next_page = reverse_lazy('restaurateur:login')
-
-
-def get_ip(request):
-    return JsonResponse({
-        'ip': request.META.get('HTTP_X_REAL_IP') or request.META.get('REMOTE_ADDR'),
-    })
 
 
 def is_manager(user):
