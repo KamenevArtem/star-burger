@@ -1,7 +1,7 @@
 set -e
 cd /opt/star-burger/
 git pull
-source ./venv/bin/activate
+source .venv/bin/activate
 pip3 install -r requirements.txt
 npm ci --dev
 ./node_modules/.bin/parcel build bundles-src/index.js --dist-dir bundles --public-url="./"
