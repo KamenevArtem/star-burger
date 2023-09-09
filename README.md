@@ -41,12 +41,12 @@ python --version
 
 В каталоге проекта создайте виртуальное окружение:
 ```sh
-python -m venv venv
+python -m venv .venv
 ```
 Активируйте его. На разных операционных системах это делается разными командами:
 
-- Windows: `.\venv\Scripts\activate`
-- MacOS/Linux: `source venv/bin/activate`
+- Windows: `.\.venv\Scripts\activate`
+- MacOS/Linux: `source .venv/bin/activate`
 
 
 Установите зависимости в виртуальное окружение:
@@ -142,18 +142,27 @@ Parcel будет следить за файлами в каталоге `bundle
 
 ## Как запустить prod-версию сайта
 
-Собрать фронтенд:
+Создайте файл .env в каталоге star-burger со следующими настройками:
 
-```sh
-./node_modules/.bin/parcel build bundles-src/index.js --dist-dir bundles --public-url="./"
+`SECRET_KEY` — секретный ключ проекта. Он отвечает за шифрование на сайте. Например, им зашифрованы все пароли на вашем сайте;
+
+`ALLOWED_HOSTS` — см. документацию Django;
+
+`YANDEX_GEOCODER_API_KEY` — Получите в кабинете разработчика Яндекс;
+
+`ROLLBAR_TOKEN` — ваш секретный ключ rollbar (необязательная переменная);
+
+`ROLLBAR_ENVIRONMENT` — необязательная переменная, в которой хранится название окружения. По умолчанию установлен режим разработки development;
+
+`DB_URL` — url адрес базы данных в PostgreSQL Cформируйте url адрес вашей базы данных по шаблону:
+```
+postgres://имя пользователя базы данных:пароль базы данных@db/название базы данных`
 ```
 
-Настроить бэкенд: создать файл `.env` в каталоге `star_burger/` со следующими настройками:
-
-- `DEBUG` — дебаг-режим. Поставьте `False`.
-- `SECRET_KEY` — секретный ключ проекта. Он отвечает за шифрование на сайте. Например, им зашифрованы все пароли на вашем сайте.
-- `ALLOWED_HOSTS` — [см. документацию Django](https://docs.djangoproject.com/en/3.1/ref/settings/#allowed-hosts)
-
+Запустите скрипт:
+```
+bash deploy.sh
+```
 ## Цели проекта
 
 Код написан в учебных целях — это урок в курсе по Python и веб-разработке на сайте [Devman](https://dvmn.org). За основу был взят код проекта [FoodCart](https://github.com/Saibharath79/FoodCart).
@@ -161,3 +170,6 @@ Parcel будет следить за файлами в каталоге `bundle
 Где используется репозиторий:
 
 - Второй и третий урок [учебного курса Django](https://dvmn.org/modules/django/)
+
+
+Ссылка на сайт: [dev-stb.ru](https://www.dev-stb.ru)
